@@ -1,7 +1,7 @@
 name: hive_simple
 description: This plugin contains a set of classes that make it easy to use save and fetch data from hive db platform in Flutter. It supports Android and iOS.
 version: 1.0.2
-#homepage: https://github.com/dexbytes
+homepage: https://github.com/dexbytes
 repository: https://github.com/dexbytesinfotech/hive-simple.git
 
 environment:
