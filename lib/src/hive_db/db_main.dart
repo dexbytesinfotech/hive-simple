@@ -33,7 +33,7 @@ class DbMain {
       Hive.init(directory.path);
       _registerAdapters();
       _isDbInit = true;
-      _tableNameList??=[];
+      _tableNameList ??= [];
       await _fetchAndOpenBoxTable();
     } catch (e) {
       debugPrint("Error initializing Hive: $e");
@@ -44,18 +44,21 @@ class DbMain {
   Future<ResponseWrapper?> _fetchAndOpenBoxTable() async {
     if (_isDbInit) {
       try {
-        _tableNameList??=[];
+        _tableNameList ??= [];
 
-        if(_tableNameList!.isEmpty){
+        if (_tableNameList!.isEmpty) {
           ResponseWrapper result = await hiveGetItemList(tablesName._dbTables);
-          if(result.isSuccess && result.data!=null && result.data!.isNotEmpty && result.data!["result"].isNotEmpty){
-            for(Map<String,String> tableNameMap in result.data!["result"]) {
+          if (result.isSuccess &&
+              result.data != null &&
+              result.data!.isNotEmpty &&
+              result.data!["result"].isNotEmpty) {
+            for (Map<String, String> tableNameMap in result.data!["result"]) {
               String? tableName = tableNameMap['table_name'];
-              if(tableName !=null && tableName.isNotEmpty){
+              if (tableName != null && tableName.isNotEmpty) {
                 try {
                   _registerAdapters();
                   await openDatabaseBoxes(tableName: tableName);
-                  if(!_tableNameList!.contains(tableName)) {
+                  if (!_tableNameList!.contains(tableName)) {
                     _tableNameList!.add(tableName);
                   }
                 } catch (e) {
@@ -63,15 +66,12 @@ class DbMain {
                 }
               }
             }
-          }
-          else{
+          } else {
             return result;
           }
-        }
-        else{
-
-          for(String tableName in _tableNameList!) {
-            if(tableName.isNotEmpty){
+        } else {
+          for (String tableName in _tableNameList!) {
+            if (tableName.isNotEmpty) {
               try {
                 _registerAdapters();
                 await openDatabaseBoxes(tableName: tableName);
@@ -81,9 +81,7 @@ class DbMain {
             }
           }
         }
-
-      }
-      catch (e) {
+      } catch (e) {
         debugPrint("Error initializing Hive: $e");
       }
       return ResponseWrapper(
@@ -98,6 +96,7 @@ class DbMain {
       data: null,
     );
   }
+
   /// Register Hive adapters if not registered
   void _registerAdapters() {
     if (!Hive.isAdapterRegistered(0)) {
@@ -109,17 +108,15 @@ class DbMain {
     }
   }
 
-
   /// Call this function to create multi table by single call
   Future<ResponseWrapper?> createNewTable(List<String> tableNameList) async {
     if (_isDbInit) {
       try {
-        _tableNameList??=[];
-        if(tableNameList.isNotEmpty){
-          for(String tableName in tableNameList)
-          {
-            if(tableName.isNotEmpty) {
-              if(!_tableNameList!.contains(tableName)){
+        _tableNameList ??= [];
+        if (tableNameList.isNotEmpty) {
+          for (String tableName in tableNameList) {
+            if (tableName.isNotEmpty) {
+              if (!_tableNameList!.contains(tableName)) {
                 ResponseWrapper result = await hiveAddItem(
                     tablesName._dbTables, {"table_name": tableName},
                     isAddedLocally: true);
@@ -127,18 +124,14 @@ class DbMain {
                   _registerAdapters();
                   await openDatabaseBoxes(tableName: tableName);
                   _tableNameList!.add(tableName);
-                }
-                else {
+                } else {
                   return result;
                 }
               }
             }
           }
-
         }
-
-      }
-      catch (e) {
+      } catch (e) {
         debugPrint("Error initializing Hive: $e");
       }
       return ResponseWrapper(
@@ -159,17 +152,15 @@ class DbMain {
     try {
       /// Don't remove it because it is created for internal
       await tablesName._getHiveBoxForTable(tablesName._dbTables);
-    }
-    catch (e) {
+    } catch (e) {
       debugPrint("Error opening database box: $e");
     }
     try {
       /// Don't remove it because it is created for internal
-      if(tableName!=null && tableName.isNotEmpty){
+      if (tableName != null && tableName.isNotEmpty) {
         await tablesName._getHiveBoxForTable(tableName);
       }
-    }
-    catch (e) {
+    } catch (e) {
       debugPrint("Error opening database box: $e");
     }
     //
@@ -222,12 +213,11 @@ class DbMain {
       );
     }
 
-    _tableNameList??=[];
-    for(String tableName in _tableNameList!){
+    _tableNameList ??= [];
+    for (String tableName in _tableNameList!) {
       try {
         Box? box = await tablesName._getHiveBoxForTable(tableName);
         await box?.clear();
-
       } catch (e) {
         debugPrint("Error clearing database: $e");
       }
@@ -241,8 +231,7 @@ class DbMain {
         message: "Clear successfully",
         data: null,
       );
-    }
-    catch (e) {
+    } catch (e) {
       debugPrint("Error clearing database: $e");
     }
     // try {
@@ -296,9 +285,9 @@ class DbMain {
 
   /// Delete all data from a specific table
 
-  Future<ResponseWrapper> dbDeleteSelectedTable({String columnName = ""}) async {
-    if (columnName.trim().isEmpty)
-    {
+  Future<ResponseWrapper> dbDeleteSelectedTable(
+      {String columnName = ""}) async {
+    if (columnName.trim().isEmpty) {
       return ResponseWrapper(
         isSuccess: false,
         message: "Please Enter Correct table name",
@@ -309,11 +298,10 @@ class DbMain {
     if (!_isDbInit) await dbInit();
     try {
       var box = await tablesName._getHiveBoxForTable(columnName);
-      if(box!=null){
+      if (box != null) {
         await box.clear();
       }
-    }
-    catch (e) {
+    } catch (e) {
       debugPrint("Error deleting data from table: $e");
     }
     return ResponseWrapper(
@@ -347,10 +335,9 @@ class DbMain {
 
   /// Function to delete an item in the specified table
   Future<ResponseWrapper> deleteSelectedItem<E>(
-      String tableName,
-      List<dynamic> itemIds,
-      ) async
-  {
+    String tableName,
+    List<dynamic> itemIds,
+  ) async {
     if (!_isDbInit) await dbInit();
 
     try {
@@ -391,12 +378,11 @@ class DbMain {
 
   /// Function to update an item in the specified table
   Future<ResponseWrapper> updateItem<E>(
-      String tableName,
-      dynamic itemId,
-      Map<String, dynamic> newData, {
-        E Function(Map<String, dynamic>)? returnType,
-      })
-  async {
+    String tableName,
+    dynamic itemId,
+    Map<String, dynamic> newData, {
+    E Function(Map<String, dynamic>)? returnType,
+  }) async {
     if (!_isDbInit) await dbInit();
 
     try {
@@ -440,7 +426,8 @@ class DbMain {
       }
 
       // Convert the new data into the Hive model
-      var modelData = tablesName._convertRequestModelToHiveModel(tableName, newData,rowId:itemId);
+      var modelData = tablesName
+          ._convertRequestModelToHiveModel(tableName, newData, rowId: itemId);
       if (modelData == null) {
         return ResponseWrapper(
           isSuccess: false,
@@ -484,14 +471,13 @@ class DbMain {
 
   /// Function to add an item to the specified table
   Future<ResponseWrapper> hiveAddItem<E>(
-      String tableName,
-      Map<String, dynamic> data, {
-        E Function(Map<String, dynamic>)? returnType,
-        bool? isAddedLocally = false,
-        int? rowId,
-        String? keyToAvoidDuplicateEntry,
-      })
-  async {
+    String tableName,
+    Map<String, dynamic> data, {
+    E Function(Map<String, dynamic>)? returnType,
+    bool? isAddedLocally = false,
+    int? rowId,
+    String? keyToAvoidDuplicateEntry,
+  }) async {
     if (!DbMain._isDbInit) await dbInit();
 
     try {
@@ -505,7 +491,8 @@ class DbMain {
       }
 
       // Convert data to Hive model
-      var modelData = tablesName._convertRequestModelToHiveModel(tableName, data,rowId:rowId);
+      var modelData = tablesName
+          ._convertRequestModelToHiveModel(tableName, data, rowId: rowId);
       if (modelData == null) {
         return ResponseWrapper(
           isSuccess: false,
@@ -515,7 +502,8 @@ class DbMain {
 
       // Check for duplicate entry
       bool alreadyExist = false;
-      if (keyToAvoidDuplicateEntry != null && keyToAvoidDuplicateEntry.isNotEmpty) {
+      if (keyToAvoidDuplicateEntry != null &&
+          keyToAvoidDuplicateEntry.isNotEmpty) {
         alreadyExist = _isDuplicateEntry(box, data, keyToAvoidDuplicateEntry);
       }
 
@@ -530,19 +518,18 @@ class DbMain {
       var itemId = await box.add(modelData);
 
       // Update local ID if required
-      if (isAddedLocally!=null && isAddedLocally==true) {
+      if (isAddedLocally != null && isAddedLocally == true) {
         try {
           if (modelData is Map<String, dynamic>) {
-            if(modelData.containsKey("id")){
+            if (modelData.containsKey("id")) {
+              modelData['id'] = itemId; // Assumes `modelData` is a Map
+            } else {
               modelData['id'] = itemId; // Assumes `modelData` is a Map
             }
-            else{
-              modelData['id'] = itemId; // Assumes `modelData` is a Map
-            }
-          }
-          else{
+          } else {
             modelData.id = itemId; // Assumes `modelData` is a Map
-            modelData.dynamicData["id"] = itemId; // Assumes `modelData` is a Map
+            modelData.dynamicData["id"] =
+                itemId; // Assumes `modelData` is a Map
           }
 
           await box.put(itemId, modelData);
@@ -581,8 +568,7 @@ class DbMain {
           data: savedData,
           message: "Item added successfully ",
         );
-      }
-      else {
+      } else {
         return ResponseWrapper(
           isSuccess: true,
           data: savedData?.toJson() ?? savedData,
@@ -597,13 +583,10 @@ class DbMain {
     }
   }
 
-
   /// Function to get all  items from specified table
-  Future<ResponseWrapper> hiveGetItemList<E>(
-      String tableName, {
-        E Function(Map<String, dynamic>)? fromJson, bool? isResentOnTop = true
-      })
-  async {
+  Future<ResponseWrapper> hiveGetItemList<E>(String tableName,
+      {E Function(Map<String, dynamic>)? fromJson,
+      bool? isResentOnTop = true}) async {
     if (!DbMain._isDbInit) await dbInit();
 
     try {
@@ -619,25 +602,25 @@ class DbMain {
 
       // Retrieve all data from the box
       var rawData = box.values;
-      if(rawData.isNotEmpty && isResentOnTop==true){
-        rawData =  rawData.toList().reversed;
+      if (rawData.isNotEmpty && isResentOnTop == true) {
+        rawData = rawData.toList().reversed;
       }
       // Map the raw data to the desired type using `fromJson`
       var dataList = rawData.map((value) {
         if (fromJson != null) {
           if (value is Map<dynamic, dynamic>) {
-            return fromJson(value.map((key, value) => MapEntry(key.toString(), value)));
-          }
-          else if (value is Map<String, dynamic>) {
-            return fromJson(value.map((key, value) => MapEntry(key.toString(), value)));
+            return fromJson(
+                value.map((key, value) => MapEntry(key.toString(), value)));
+          } else if (value is Map<String, dynamic>) {
+            return fromJson(
+                value.map((key, value) => MapEntry(key.toString(), value)));
           } else if (value.toJson is Function) {
             return value.dynamicData;
           }
         } else {
           if (value is Map<dynamic, dynamic>) {
             return value.map((key, value) => MapEntry(key.toString(), value));
-          }
-          else if (value is Map<String, dynamic>) {
+          } else if (value is Map<String, dynamic>) {
             return value;
           } else if (value.toJson is Function) {
             return value.dynamicData;
@@ -649,7 +632,7 @@ class DbMain {
       return ResponseWrapper(
         isSuccess: true,
         message: "Data retrieved successfully from ",
-        data: {"result":dataList},
+        data: {"result": dataList},
       );
     } catch (e) {
       debugPrint("Error retrieving data from : $e");
@@ -662,13 +645,11 @@ class DbMain {
   }
 
   /// Function to search from selected table
-  Future<ResponseWrapper> hiveSearchData<E>(
-      String tableName, {
-        List<String>? searchQueries = const [],
-        E Function(Map<String, dynamic>)? fromJson,
-        Map<String, dynamic>? searchForEqualsValue,bool? isResentOnTop = true
-      })
-  async {
+  Future<ResponseWrapper> hiveSearchData<E>(String tableName,
+      {List<String>? searchQueries = const [],
+      E Function(Map<String, dynamic>)? fromJson,
+      Map<String, dynamic>? searchForEqualsValue,
+      bool? isResentOnTop = true}) async {
     // Validate input conditions
     if ((searchQueries == null || searchQueries.isEmpty) &&
         (searchForEqualsValue == null || searchForEqualsValue.isEmpty)) {
@@ -716,7 +697,10 @@ class DbMain {
             return jsonData.values.any((field) {
               if (field != null) {
                 return searchQueries.any((query) {
-                  return field.toString().toLowerCase().contains(query.toLowerCase());
+                  return field
+                      .toString()
+                      .toLowerCase()
+                      .contains(query.toLowerCase());
                 });
               }
               return false;
@@ -732,19 +716,21 @@ class DbMain {
         if (value is Map<String, dynamic>) {
           return fromJson != null ? fromJson(value) : value;
         } else if (value.toJson is Function) {
-          return fromJson != null ? fromJson(value.dynamicData) : value.dynamicData;
+          return fromJson != null
+              ? fromJson(value.dynamicData)
+              : value.dynamicData;
         }
         return value;
       }).toList();
 
-      if(dataList.isNotEmpty && isResentOnTop==true){
-        dataList =  dataList.reversed.toList();
+      if (dataList.isNotEmpty && isResentOnTop == true) {
+        dataList = dataList.reversed.toList();
       }
 
       return ResponseWrapper(
         isSuccess: true,
         message: "Data retrieved successfully from ",
-        data: {"result":dataList},
+        data: {"result": dataList},
       );
     } catch (e) {
       return ResponseWrapper(
@@ -754,16 +740,14 @@ class DbMain {
       );
     }
   }
-
 
   ///
   Future<ResponseWrapper> hiveSearchDataByQuery<E>(
-      String tableName, String query, {
-        List<String>? searchQueries = const [],
-        E Function(Map<String, dynamic>)? fromJson,
-        Map<String, dynamic>? searchForEqualsValue,bool? isResentOnTop = true
-      })
-  async {
+      String tableName, String query,
+      {List<String>? searchQueries = const [],
+      E Function(Map<String, dynamic>)? fromJson,
+      Map<String, dynamic>? searchForEqualsValue,
+      bool? isResentOnTop = true}) async {
     // Validate input conditions
     if ((searchQueries == null || searchQueries.isEmpty) &&
         (searchForEqualsValue == null || searchForEqualsValue.isEmpty)) {
@@ -811,7 +795,10 @@ class DbMain {
             return jsonData.values.any((field) {
               if (field != null) {
                 return searchQueries.any((query) {
-                  return field.toString().toLowerCase().contains(query.toLowerCase());
+                  return field
+                      .toString()
+                      .toLowerCase()
+                      .contains(query.toLowerCase());
                 });
               }
               return false;
@@ -827,19 +814,21 @@ class DbMain {
         if (value is Map<String, dynamic>) {
           return fromJson != null ? fromJson(value) : value;
         } else if (value.toJson is Function) {
-          return fromJson != null ? fromJson(value.dynamicData) : value.dynamicData;
+          return fromJson != null
+              ? fromJson(value.dynamicData)
+              : value.dynamicData;
         }
         return value;
       }).toList();
 
-      if(dataList.isNotEmpty && isResentOnTop==true){
-        dataList =  dataList.reversed.toList();
+      if (dataList.isNotEmpty && isResentOnTop == true) {
+        dataList = dataList.reversed.toList();
       }
 
       return ResponseWrapper(
         isSuccess: true,
         message: "Data retrieved successfully from ",
-        data: {"result":dataList},
+        data: {"result": dataList},
       );
     } catch (e) {
       return ResponseWrapper(
@@ -850,26 +839,19 @@ class DbMain {
     }
   }
 
-
-
-
-
-
-
-
 // Helper function for duplicate entry check
   bool _isDuplicateEntry(
-      var box,
-      Map<String, dynamic> data,
-      String keyToAvoidDuplicateEntry,
-      ) {
+    var box,
+    Map<String, dynamic> data,
+    String keyToAvoidDuplicateEntry,
+  ) {
     try {
       var enteredValue = data[keyToAvoidDuplicateEntry]?.toString() ?? "";
       if (enteredValue.isEmpty) return false;
       bool isExist = box.values.any((rowData) {
         Map<String, dynamic>? jsonData;
         if (rowData is Map<String, dynamic>) {
-          jsonData = rowData ["dynamic_data"];
+          jsonData = rowData["dynamic_data"];
         } else if (rowData.toJson is Function) {
           jsonData = rowData.toJson();
         }
@@ -883,7 +865,7 @@ class DbMain {
   }
 }
 
-class TablesName{
+class TablesName {
   final String propertyListBox = "property_list_box";
   final String usersBox = "users_box";
 
@@ -900,11 +882,10 @@ class TablesName{
   final String _dbTables = "db_tables_db";
 
   Future<Box?> _getHiveBoxForTable(String tableName) async {
-    if(await Hive.boxExists(tableName)) {
+    if (await Hive.boxExists(tableName)) {
       try {
         return Hive.box<HiveDynamicDataModel>(tableName);
-      }
-      catch (e) {
+      } catch (e) {
         debugPrint("$e");
         try {
           return await Hive.openBox<HiveDynamicDataModel>(tableName);
@@ -912,8 +893,7 @@ class TablesName{
           debugPrint("$e");
         }
       }
-    }
-    else {
+    } else {
       try {
         return await Hive.openBox<HiveDynamicDataModel>(tableName);
       } catch (e) {
@@ -923,10 +903,14 @@ class TablesName{
 
     return null;
   }
+
   /// Converting Normal model to Hive model
-  dynamic _convertRequestModelToHiveModel(String tableName, Map<String, dynamic> data,{int? rowId}) {
+  dynamic _convertRequestModelToHiveModel(
+      String tableName, Map<String, dynamic> data,
+      {int? rowId}) {
     try {
-      HiveDynamicDataModel mHiveProjectModel = HiveDynamicDataModel(id:rowId,dynamicData: data);
+      HiveDynamicDataModel mHiveProjectModel =
+          HiveDynamicDataModel(id: rowId, dynamicData: data);
       return mHiveProjectModel;
     } catch (e) {
       debugPrint("$e");
@@ -976,7 +960,4 @@ class TablesName{
 
     return null;
   }
-
 }
-
-
