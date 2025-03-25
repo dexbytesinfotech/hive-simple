@@ -16,11 +16,15 @@ class DbMain {
   // Box names
   final TablesName tablesName = TablesName();
 
+  /// All current Created Table name
+  static List<String>? _tableNameList;
+
   // Factory constructor to return the singleton instance
   factory DbMain() => instance;
 
   // Private constructor for singleton
   DbMain._internal();
+
   /// Initialize Hive database
   Future<bool> dbInit() async {
     if (_isDbInit) return true;
@@ -28,14 +32,72 @@ class DbMain {
       final directory = await getApplicationDocumentsDirectory();
       Hive.init(directory.path);
       _registerAdapters();
-      await openDatabaseBoxes();
       _isDbInit = true;
+      _tableNameList??=[];
+      await _fetchAndOpenBoxTable();
     } catch (e) {
-      print("Error initializing Hive: $e");
+      debugPrint("Error initializing Hive: $e");
     }
     return _isDbInit;
   }
 
+  Future<ResponseWrapper?> _fetchAndOpenBoxTable() async {
+    if (_isDbInit) {
+      try {
+        _tableNameList??=[];
+
+        if(_tableNameList!.isEmpty){
+          ResponseWrapper result = await hiveGetItemList(tablesName._dbTables);
+          if(result.isSuccess && result.data!=null && result.data!.isNotEmpty && result.data!["result"].isNotEmpty){
+            for(Map<String,String> tableNameMap in result.data!["result"]) {
+              String? tableName = tableNameMap['table_name'];
+              if(tableName !=null && tableName.isNotEmpty){
+                try {
+                  _registerAdapters();
+                  await openDatabaseBoxes(tableName: tableName);
+                  if(!_tableNameList!.contains(tableName)) {
+                    _tableNameList!.add(tableName);
+                  }
+                } catch (e) {
+                  debugPrint("$e");
+                }
+              }
+            }
+          }
+          else{
+            return result;
+          }
+        }
+        else{
+
+          for(String tableName in _tableNameList!) {
+            if(tableName.isNotEmpty){
+              try {
+                _registerAdapters();
+                await openDatabaseBoxes(tableName: tableName);
+              } catch (e) {
+                debugPrint("$e");
+              }
+            }
+          }
+        }
+
+      }
+      catch (e) {
+        debugPrint("Error initializing Hive: $e");
+      }
+      return ResponseWrapper(
+        isSuccess: true,
+        message: "Opened successfully",
+        data: {},
+      );
+    }
+    return ResponseWrapper(
+      isSuccess: false,
+      message: "Please inti DB by calling dbInit()",
+      data: null,
+    );
+  }
   /// Register Hive adapters if not registered
   void _registerAdapters() {
     if (!Hive.isAdapterRegistered(0)) {
@@ -47,97 +109,203 @@ class DbMain {
     }
   }
 
+
+  /// Call this function to create multi table by single call
+  Future<ResponseWrapper?> createNewTable(List<String> tableNameList) async {
+    if (_isDbInit) {
+      try {
+        _tableNameList??=[];
+        if(tableNameList.isNotEmpty){
+          for(String tableName in tableNameList)
+          {
+            if(tableName.isNotEmpty) {
+              if(!_tableNameList!.contains(tableName)){
+                ResponseWrapper result = await hiveAddItem(
+                    tablesName._dbTables, {"table_name": tableName},
+                    isAddedLocally: true);
+                if (result.isSuccess) {
+                  _registerAdapters();
+                  await openDatabaseBoxes(tableName: tableName);
+                  _tableNameList!.add(tableName);
+                }
+                else {
+                  return result;
+                }
+              }
+            }
+          }
+
+        }
+
+      }
+      catch (e) {
+        debugPrint("Error initializing Hive: $e");
+      }
+      return ResponseWrapper(
+        isSuccess: true,
+        message: "${tableNameList.toString()} created successfully",
+        data: {},
+      );
+    }
+    return ResponseWrapper(
+      isSuccess: false,
+      message: "Please inti DB by calling dbInit()",
+      data: null,
+    );
+  }
+
   /// Open necessary Hive boxes
-  Future<void> openDatabaseBoxes() async {
+  Future<void> openDatabaseBoxes({String? tableName}) async {
     try {
-      await tablesName._getHiveBoxForTable(tablesName.propertyListBox);
-    } catch (e) {
+      /// Don't remove it because it is created for internal
+      await tablesName._getHiveBoxForTable(tablesName._dbTables);
+    }
+    catch (e) {
       debugPrint("Error opening database box: $e");
     }
     try {
-      await tablesName._getHiveBoxForTable(tablesName.usersBox);
-    } catch (e) {
+      /// Don't remove it because it is created for internal
+      if(tableName!=null && tableName.isNotEmpty){
+        await tablesName._getHiveBoxForTable(tableName);
+      }
+    }
+    catch (e) {
       debugPrint("Error opening database box: $e");
     }
-    try {
-      await tablesName._getHiveBoxForTable(tablesName.contactBox);
-    } catch (e) {
-      debugPrint("Error opening database box: $e");
-    }
-    try {
-      await tablesName._getHiveBoxForTable(tablesName.leadBox);
-    } catch (e) {
-      debugPrint("Error opening database box: $e");
-    }
-    try {
-      await tablesName._getHiveBoxForTable(tablesName.assignBox);
-    } catch (e) {
-      debugPrint("Error opening database box: $e");
-    }
-    try {
-      await tablesName._getHiveBoxForTable(tablesName.followUpBox);
-    } catch (e) {
-      debugPrint("Error opening database box: $e");
-    }
-    try {
-      await tablesName._getHiveBoxForTable(tablesName.photosBox);
-    } catch (e) {
-      debugPrint("Error opening database box: $e");
-    }
+    //
+    //
+    // try {
+    //   await tablesName._getHiveBoxForTable(tablesName.propertyListBox);
+    // } catch (e) {
+    //   debugPrint("Error opening database box: $e");
+    // }
+    //
+    // try {
+    //   await tablesName._getHiveBoxForTable(tablesName.usersBox);
+    // } catch (e) {
+    //   debugPrint("Error opening database box: $e");
+    // }
+    // try {
+    //   await tablesName._getHiveBoxForTable(tablesName.contactBox);
+    // } catch (e) {
+    //   debugPrint("Error opening database box: $e");
+    // }
+    // try {
+    //   await tablesName._getHiveBoxForTable(tablesName.leadBox);
+    // } catch (e) {
+    //   debugPrint("Error opening database box: $e");
+    // }
+    // try {
+    //   await tablesName._getHiveBoxForTable(tablesName.assignBox);
+    // } catch (e) {
+    //   debugPrint("Error opening database box: $e");
+    // }
+    // try {
+    //   await tablesName._getHiveBoxForTable(tablesName.followUpBox);
+    // } catch (e) {
+    //   debugPrint("Error opening database box: $e");
+    // }
+    // try {
+    //   await tablesName._getHiveBoxForTable(tablesName.photosBox);
+    // } catch (e) {
+    //   debugPrint("Error opening database box: $e");
+    // }
   }
 
   /// Clear all entries from the database
-  Future<bool> dbClear() async {
-    if (!_isDbInit) return false;
-    try {
-      Box? box = await tablesName._getHiveBoxForTable(tablesName.propertyListBox);
-      await box?.clear();
-    } catch (e) {
-      debugPrint("Error clearing database: $e");
+  Future<ResponseWrapper> dbClear() async {
+    if (!_isDbInit) {
+      return ResponseWrapper(
+        isSuccess: false,
+        message: "Please Enter init db first by calling dbInit()",
+        data: null,
+      );
+    }
+
+    _tableNameList??=[];
+    for(String tableName in _tableNameList!){
+      try {
+        Box? box = await tablesName._getHiveBoxForTable(tableName);
+        await box?.clear();
+
+      } catch (e) {
+        debugPrint("Error clearing database: $e");
+      }
     }
     try {
-      Box? box = await tablesName._getHiveBoxForTable(tablesName.usersBox);
+      /// Don't remove it because it is created for internal
+      Box? box = await tablesName._getHiveBoxForTable(tablesName._dbTables);
       await box?.clear();
-    } catch (e) {
+      return ResponseWrapper(
+        isSuccess: true,
+        message: "Clear successfully",
+        data: null,
+      );
+    }
+    catch (e) {
       debugPrint("Error clearing database: $e");
     }
-    try {
-      Box? box = await tablesName._getHiveBoxForTable(tablesName.contactBox);
-      await box?.clear();
-    } catch (e) {
-      debugPrint("Error clearing database: $e");
-    }
-    try {
-      Box? box = await tablesName._getHiveBoxForTable(tablesName.leadBox);
-      await box?.clear();
-    } catch (e) {
-      debugPrint("Error clearing database: $e");
-    }
-    try {
-      Box? box = await tablesName._getHiveBoxForTable(tablesName.assignBox);
-      await box?.clear();
-    } catch (e) {
-      debugPrint("Error clearing database: $e");
-    }
-    try {
-      Box? box = await tablesName._getHiveBoxForTable(tablesName.photosBox);
-      await box?.clear();
-    } catch (e) {
-      debugPrint("Error clearing database: $e");
-    }
-    try {
-      Box? box = await tablesName._getHiveBoxForTable(tablesName.followUpBox);
-      await box?.clear();
-    } catch (e) {
-      debugPrint("Error clearing database: $e");
-    }
-    return true;
+    // try {
+    //   Box? box = await tablesName._getHiveBoxForTable(tablesName.propertyListBox);
+    //   await box?.clear();
+    // } catch (e) {
+    //   debugPrint("Error clearing database: $e");
+    // }
+    // try {
+    //   Box? box = await tablesName._getHiveBoxForTable(tablesName.usersBox);
+    //   await box?.clear();
+    // } catch (e) {
+    //   debugPrint("Error clearing database: $e");
+    // }
+    // try {
+    //   Box? box = await tablesName._getHiveBoxForTable(tablesName.contactBox);
+    //   await box?.clear();
+    // } catch (e) {
+    //   debugPrint("Error clearing database: $e");
+    // }
+    // try {
+    //   Box? box = await tablesName._getHiveBoxForTable(tablesName.leadBox);
+    //   await box?.clear();
+    // } catch (e) {
+    //   debugPrint("Error clearing database: $e");
+    // }
+    // try {
+    //   Box? box = await tablesName._getHiveBoxForTable(tablesName.assignBox);
+    //   await box?.clear();
+    // } catch (e) {
+    //   debugPrint("Error clearing database: $e");
+    // }
+    // try {
+    //   Box? box = await tablesName._getHiveBoxForTable(tablesName.photosBox);
+    //   await box?.clear();
+    // } catch (e) {
+    //   debugPrint("Error clearing database: $e");
+    // }
+    // try {
+    //   Box? box = await tablesName._getHiveBoxForTable(tablesName.followUpBox);
+    //   await box?.clear();
+    // } catch (e) {
+    //   debugPrint("Error clearing database: $e");
+    // }
+    return ResponseWrapper(
+      isSuccess: true,
+      message: "Clear successfully",
+      data: null,
+    );
   }
 
   /// Delete all data from a specific table
 
-  Future<bool> dbDeleteSelectedTable({String columnName = ""}) async {
-    if (columnName.trim().isEmpty) return false;
+  Future<ResponseWrapper> dbDeleteSelectedTable({String columnName = ""}) async {
+    if (columnName.trim().isEmpty)
+    {
+      return ResponseWrapper(
+        isSuccess: false,
+        message: "Please Enter Correct table name",
+        data: null,
+      );
+    }
+
     if (!_isDbInit) await dbInit();
     try {
       var box = await tablesName._getHiveBoxForTable(columnName);
@@ -148,30 +316,34 @@ class DbMain {
     catch (e) {
       debugPrint("Error deleting data from table: $e");
     }
-    return true;
+    return ResponseWrapper(
+      isSuccess: true,
+      message: "Deleted successfully",
+      data: null,
+    );
   }
 
   /// Close the Hive box
-  Future<void> closeBdBox({String? boxName, bool? all = false}) async {
-    if (boxName==null || boxName.trim().isEmpty && all==false) return;
-
-    if (!_isDbInit) await dbInit();
-    try {
-      if (boxName.trim().isNotEmpty){
-      var box = await tablesName._getHiveBoxForTable(boxName);
-      if(box!=null){
-      if (box.isOpen) {
-      await box.close();
-      }
-      }
-    }
-      // else if(all==true){
-      //
-      // }
-    } catch (e) {
-      debugPrint("Error closing database box: $e");
-    }
-  }
+  // Future<void> _closeBdBox({String? boxName, bool? all = false}) async {
+  //   if (boxName==null || boxName.trim().isEmpty && all==false) return;
+  //
+  //   if (!_isDbInit) await dbInit();
+  //   try {
+  //     if (boxName.trim().isNotEmpty){
+  //     var box = await tablesName._getHiveBoxForTable(boxName);
+  //     if(box!=null){
+  //     if (box.isOpen) {
+  //     await box.close();
+  //     }
+  //     }
+  //   }
+  //     // else if(all==true){
+  //     //
+  //     // }
+  //   } catch (e) {
+  //     debugPrint("Error closing database box: $e");
+  //   }
+  // }
 
   /// Function to delete an item in the specified table
   Future<ResponseWrapper> deleteSelectedItem<E>(
@@ -310,13 +482,13 @@ class DbMain {
     }
   }
 
-
   /// Function to add an item to the specified table
   Future<ResponseWrapper> hiveAddItem<E>(
       String tableName,
       Map<String, dynamic> data, {
         E Function(Map<String, dynamic>)? returnType,
         bool? isAddedLocally = false,
+        int? rowId,
         String? keyToAvoidDuplicateEntry,
       })
   async {
@@ -333,7 +505,7 @@ class DbMain {
       }
 
       // Convert data to Hive model
-      var modelData = tablesName._convertRequestModelToHiveModel(tableName, data);
+      var modelData = tablesName._convertRequestModelToHiveModel(tableName, data,rowId:rowId);
       if (modelData == null) {
         return ResponseWrapper(
           isSuccess: false,
@@ -448,7 +620,7 @@ class DbMain {
       // Retrieve all data from the box
       var rawData = box.values;
       if(rawData.isNotEmpty && isResentOnTop==true){
-       rawData =  rawData.toList().reversed;
+        rawData =  rawData.toList().reversed;
       }
       // Map the raw data to the desired type using `fromJson`
       var dataList = rawData.map((value) {
@@ -583,6 +755,108 @@ class DbMain {
     }
   }
 
+
+  ///
+  Future<ResponseWrapper> hiveSearchDataByQuery<E>(
+      String tableName, String query, {
+        List<String>? searchQueries = const [],
+        E Function(Map<String, dynamic>)? fromJson,
+        Map<String, dynamic>? searchForEqualsValue,bool? isResentOnTop = true
+      })
+  async {
+    // Validate input conditions
+    if ((searchQueries == null || searchQueries.isEmpty) &&
+        (searchForEqualsValue == null || searchForEqualsValue.isEmpty)) {
+      return ResponseWrapper(
+        isSuccess: false,
+        message: "No search criteria provided",
+        data: null,
+      );
+    }
+
+    if (!DbMain._isDbInit) await dbInit();
+
+    try {
+      // Open Hive box
+      var box = await tablesName._getHiveBoxForTable(tableName);
+      if (box == null) {
+        return ResponseWrapper(
+          isSuccess: false,
+          message: "Failed to open Hive box ",
+          data: null,
+        );
+      }
+
+      // Filter and process the data
+      List<dynamic>? dataList = box.values.where((value) {
+        dynamic jsonData;
+
+        // Handle non-Map values
+        if (value is Map<String, dynamic>) {
+          jsonData = value;
+        } else if (value.toJson is Function) {
+          jsonData = value.dynamicData;
+        }
+
+        if (jsonData != null && jsonData["id"] != null) {
+          // Check for equality matches
+          if (searchForEqualsValue != null && searchForEqualsValue.isNotEmpty) {
+            return searchForEqualsValue.entries.every((entry) {
+              return jsonData[entry.key] == entry.value;
+            });
+          }
+
+          // Check for queries containing specific values
+          if (searchQueries != null && searchQueries.isNotEmpty) {
+            return jsonData.values.any((field) {
+              if (field != null) {
+                return searchQueries.any((query) {
+                  return field.toString().toLowerCase().contains(query.toLowerCase());
+                });
+              }
+              return false;
+            });
+          }
+        } else {
+          debugPrint("Null or invalid database value encountered.");
+        }
+
+        return false;
+      }).map((value) {
+        // Convert value to the desired format
+        if (value is Map<String, dynamic>) {
+          return fromJson != null ? fromJson(value) : value;
+        } else if (value.toJson is Function) {
+          return fromJson != null ? fromJson(value.dynamicData) : value.dynamicData;
+        }
+        return value;
+      }).toList();
+
+      if(dataList.isNotEmpty && isResentOnTop==true){
+        dataList =  dataList.reversed.toList();
+      }
+
+      return ResponseWrapper(
+        isSuccess: true,
+        message: "Data retrieved successfully from ",
+        data: {"result":dataList},
+      );
+    } catch (e) {
+      return ResponseWrapper(
+        isSuccess: false,
+        message: "Error retrieving data from : $e",
+        data: null,
+      );
+    }
+  }
+
+
+
+
+
+
+
+
 // Helper function for duplicate entry check
   bool _isDuplicateEntry(
       var box,
@@ -592,7 +866,7 @@ class DbMain {
     try {
       var enteredValue = data[keyToAvoidDuplicateEntry]?.toString() ?? "";
       if (enteredValue.isEmpty) return false;
-      return box.values.any((rowData) {
+      bool isExist = box.values.any((rowData) {
         Map<String, dynamic>? jsonData;
         if (rowData is Map<String, dynamic>) {
           jsonData = rowData ["dynamic_data"];
@@ -601,6 +875,7 @@ class DbMain {
         }
         return jsonData?[keyToAvoidDuplicateEntry]?.toString() == enteredValue;
       });
+      return isExist;
     } catch (e) {
       debugPrint("Error during duplicate check: $e");
       return true; // Assume duplicate to avoid unsafe additions
@@ -620,6 +895,9 @@ class TablesName{
   final String photosBox = "photos_box";
 
   final String dynamicDataBox = "dynamic_data_box";
+
+  /// It is use for internal use only
+  final String _dbTables = "db_tables_db";
 
   Future<Box?> _getHiveBoxForTable(String tableName) async {
     if(await Hive.boxExists(tableName)) {
@@ -700,4 +978,5 @@ class TablesName{
   }
 
 }
+
 

@@ -75,9 +75,9 @@ path
 file:///Users/dexbytes_ultra/.pub-cache/hosted/pub.dev/path-1.9.0/
 file:///Users/dexbytes_ultra/.pub-cache/hosted/pub.dev/path-1.9.0/lib/
 path_provider
-3.2
-file:///Users/dexbytes_ultra/.pub-cache/hosted/pub.dev/path_provider-2.1.4/
-file:///Users/dexbytes_ultra/.pub-cache/hosted/pub.dev/path_provider-2.1.4/lib/
+3.4
+file:///Users/dexbytes_ultra/.pub-cache/hosted/pub.dev/path_provider-2.1.5/
+file:///Users/dexbytes_ultra/.pub-cache/hosted/pub.dev/path_provider-2.1.5/lib/
 path_provider_android
 3.5
 file:///Users/dexbytes_ultra/.pub-cache/hosted/pub.dev/path_provider_android-2.2.15/
@@ -100,8 +100,8 @@ file:///Users/dexbytes_ultra/.pub-cache/hosted/pub.dev/path_provider_windows-2.3
 file:///Users/dexbytes_ultra/.pub-cache/hosted/pub.dev/path_provider_windows-2.3.0/lib/
 platform
 3.2
-file:///Users/dexbytes_ultra/.pub-cache/hosted/pub.dev/platform-3.1.5/
-file:///Users/dexbytes_ultra/.pub-cache/hosted/pub.dev/platform-3.1.5/lib/
+file:///Users/dexbytes_ultra/.pub-cache/hosted/pub.dev/platform-3.1.6/
+file:///Users/dexbytes_ultra/.pub-cache/hosted/pub.dev/platform-3.1.6/lib/
 plugin_platform_interface
 3.0
 file:///Users/dexbytes_ultra/.pub-cache/hosted/pub.dev/plugin_platform_interface-2.1.8/
@@ -143,9 +143,9 @@ vm_service
 file:///Users/dexbytes_ultra/.pub-cache/hosted/pub.dev/vm_service-14.2.5/
 file:///Users/dexbytes_ultra/.pub-cache/hosted/pub.dev/vm_service-14.2.5/lib/
 xdg_directories
-3.0
-file:///Users/dexbytes_ultra/.pub-cache/hosted/pub.dev/xdg_directories-1.0.4/
-file:///Users/dexbytes_ultra/.pub-cache/hosted/pub.dev/xdg_directories-1.0.4/lib/
+3.3
+file:///Users/dexbytes_ultra/.pub-cache/hosted/pub.dev/xdg_directories-1.1.0/
+file:///Users/dexbytes_ultra/.pub-cache/hosted/pub.dev/xdg_directories-1.1.0/lib/
 hive_simple
 3.4
 file:///Users/dexbytes_ultra/StudioProjects/flutter_modules_sample/hive-simple/

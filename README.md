@@ -1,22 +1,32 @@
 # hive-simple
 
-A library that exposes device specific speech recognition capability.
+This is a Hive-based Flutter package designed to simplify data storage and management.
+We have created a set of custom functions to add, update, and delete data, making it easy to
+interact with your Hive database. The package eliminates the need to add a separate adapter for each
+table, providing a more flexible and efficient way to manage data across your Flutter project.
 
-This plugin contains a set of classes that make it easy to use the voice recognition
-capabilities of the underlying platform in Flutter. It supports Android, iOS. The
-target use cases for this library are commands and short phrases, not continuous spoken
-conversion or always on listening.
+You can use this package in any Flutter project, including those built with FlutterFlow. For
+FlutterFlow users, you can easily create tables directly from the FlutterFlow constants.
 
-|               | Android   | iOS    |
-| :-------------| :---------| :------|
-| **Support**   | SDK 21+   | 10.0+  |
+|             | Android | iOS   |
+|:------------|:--------|:------|
+| **Support** | SDK 21+ | 10.0+ |
 
 ## Features
 
 Use this plugin in your Flutter app to:
 
-* Easy to store data
-* Easy to fetch data.
+* Easy to store data by calling await DbMain.instance.hiveAddItem(
+  tableName,
+  data, {
+  E Function(Map<String, dynamic>)? returnType,
+  bool? isAddedLocally = false,
+  String? keyToAvoidDuplicateEntry,
+  })
+* Easy to fetch data. calling await DbMain.instance.hiveGetItemList(
+  String tableName, {
+  E Function(Map<String, dynamic>)? fromJson, bool? isResentOnTop = true
+  })
 
 ## Getting started
 
@@ -24,13 +34,12 @@ This plugin relies on the flutter core.
 
 ## Usage
 
-To use the plugin you just need to add hive_simple: ^1.0.0 into your pubspec.yaml file and run
+To use the plugin you just need to add hive_simple: ^1.0.2 into your pubspec.yaml file and run
 pub get.
 
 #### Add following into your package's pubspec.yaml (and run an implicit dart pub get):
 
-hive_simple: ^1.0.0
-
+hive_simple: ^1.0.2
 
 ## Example
 
@@ -40,7 +49,10 @@ hive_simple: ^1.0.0
     void main() async {
     WidgetsFlutterBinding.ensureInitialized();
     // Add your function code here!
+    // Init Hive Db by call below 
     await DbMain.instance.dbInit();
+    // Add your hive box you have to add box before using it in init method
+    await DbMain.instance.createNewTable(["users","product"]);
     runApp(const MyApp());
     }
     
@@ -102,7 +114,6 @@ hive_simple: ^1.0.0
     ));
     }
     }
-
 
 ## Changelog
 
