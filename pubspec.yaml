@@ -3,7 +3,9 @@ description: This plugin contains a set of classes that make it easy to use save
 version: 1.0.2
 homepage: https://github.com/dexbytes
 repository: https://github.com/dexbytesinfotech/hive-simple.git
-publish_to: https://pub.dev
+issue_tracker: https://github.com/dexbytesinfotech/hive-simple/issues
+publish_to: none
+
 
 environment:
   sdk: '>=3.4.1 <4.0.0'
